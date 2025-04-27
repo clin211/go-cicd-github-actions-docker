@@ -1,86 +1,105 @@
-name: Build and Deploy
+name: Deploy to Production
 
+# 触发条件：当 main 分支有推送操作时
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [ main ]
+  # 也可以手动触发
+  workflow_dispatch:
+
+# 环境变量
+env:
+  IMAGE_NAME: go-app
+  REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  NAMESPACE: your-namespace
 
 jobs:
-  test:
+  # 构建并推送 Docker 镜像
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.20'
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Test
-        run: go test -v ./...
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.20'
-
-      - name: Build
-        run: CGO_ENABLED=0 GOOS=linux go build -v -o server ./cmd/server
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: app
-          path: server
-
-  docker:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: app
-          path: .
-
+      # 设置 Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Login to Docker Hub
+      # 登录到阿里云容器镜像服务
+      - name: Login to ACR
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ALIYUN_USERNAME }}
+          password: ${{ secrets.ALIYUN_PASSWORD }}
 
+      # 生成镜像标签
+      - name: Generate image tag
+        id: tag
+        run: echo "::set-output name=value::$(date +'%Y%m%d%H%M%S')-${GITHUB_SHA::8}"
+
+      # 构建并推送镜像
       - name: Build and push
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./deployments/docker/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/user-service:latest,${{ secrets.DOCKER_USERNAME }}/user-service:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.value }}
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
+  # 部署到服务器
   deploy:
-    needs: docker
+    needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy to production
-        run: echo "Deploying to production server (this is a placeholder step)"
-        # 在实际场景中，你会：
-        # 1. SSH到你的服务器
-        # 2. 拉取最新的Docker镜像
-        # 3. 重启服务或使用Docker Compose/Kubernetes部署
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 生成镜像标签
+      - name: Generate image tag
+        id: tag
+        run: echo "::set-output name=value::$(date +'%Y%m%d%H%M%S')-${GITHUB_SHA::8}"
+
+      # 准备部署文件
+      - name: Prepare deployment files
+        run: |
+          mkdir -p deploy
+          cp deployments/docker-compose.yml deploy/
+          cat > deploy/.env << EOF
+          IMAGE_NAME=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}
+          IMAGE_TAG=${{ steps.tag.outputs.value }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          EOF
+
+      # 将部署文件复制到服务器
+      - name: Copy files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "deploy/*"
+          target: "/home/go-app"
+          strip_components: 1
+
+      # 在服务器上执行部署命令
+      - name: Deploy on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /home/go-app
+            docker login ${{ env.REGISTRY }} -u ${{ secrets.ALIYUN_USERNAME }} -p ${{ secrets.ALIYUN_PASSWORD }}
+            docker-compose pull
+            docker-compose down || true
+            docker-compose up -d
+            docker image prune -f
