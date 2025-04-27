@@ -117,7 +117,7 @@ jobs:
               docker run -d \
                 --name ${CONTAINER_NAME_1} \
                 -p 18080:18080 \
-                -v /home/go-app/practice/logs/container1:/server.log \
+                -v /home/go-app/practice/logs/container1:/logs/server.log \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
@@ -126,7 +126,7 @@ jobs:
               docker run -d \
                 --name ${CONTAINER_NAME_2} \
                 -p 18081:18081 \
-                -v /home/go-app/practice/logs/container2:/server.log \
+                -v /home/go-app/practice/logs/container2:/logs/server.log \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
@@ -168,7 +168,7 @@ jobs:
               docker run -d \
                 --name ${CONTAINER_TO_UPDATE} \
                 -p ${PORT}:18080 \
-                -v ${LOG_DIR}:/app/logs \
+                -v ${LOG_DIR}:/logs/server.log \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
