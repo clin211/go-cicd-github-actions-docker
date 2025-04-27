@@ -9,9 +9,9 @@ on:
 
 # 环境变量
 env:
-  IMAGE_NAME: go-app
-  REGISTRY: registry.cn-hangzhou.aliyuncs.com
-  NAMESPACE: your-namespace
+  NAMESPACE: go-app
+  IMAGE_NAME: practice
+  REGISTRY: crpi-vfnhvlv6i4fvr8sf.cn-chengdu.personal.cr.aliyuncs.com
 
 jobs:
   # 构建并推送 Docker 镜像
