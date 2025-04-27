@@ -2,8 +2,6 @@ package log
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -51,18 +49,6 @@ func Init(opts *Options) {
 func NewLogger(opts *Options) *zapLogger {
 	if opts == nil {
 		opts = NewOptions()
-	}
-
-	// 确保日志目录存在
-	for _, path := range opts.OutputPaths {
-		if path != "stdout" && path != "stderr" {
-			dir := filepath.Dir(path)
-			if dir != "." && dir != "" {
-				if err := os.MkdirAll(dir, 0755); err != nil {
-					panic("failed to create log directory: " + err.Error())
-				}
-			}
-		}
 	}
 
 	// 将文本格式的日志级别，例如 info 转换为 zapcore.Level 类型以供后面使用

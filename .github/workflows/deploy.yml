@@ -88,13 +88,6 @@ jobs:
 
             echo "Deploying version: ${VERSION}"
 
-            # 创建日志目录（如果不存在）
-            mkdir -p /home/go-app/practice/logs/container1
-            mkdir -p /home/go-app/practice/logs/container2
-
-            # 确保日志目录权限正确
-            chmod -R 755 /home/go-app/practice/logs
-
             # 拉取新镜像
             echo "Pulling image: ${FULL_IMAGE_NAME}..."
             docker pull ${FULL_IMAGE_NAME}
@@ -117,7 +110,6 @@ jobs:
               docker run -d \
                 --name ${CONTAINER_NAME_1} \
                 -p 18080:18080 \
-                -v /home/go-app/practice/logs/container1:/logs/server.log \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
@@ -126,7 +118,6 @@ jobs:
               docker run -d \
                 --name ${CONTAINER_NAME_2} \
                 -p 18081:18081 \
-                -v /home/go-app/practice/logs/container2:/logs/server.log \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
@@ -158,17 +149,9 @@ jobs:
               # 启动新容器
               echo "Starting new container: ${CONTAINER_TO_UPDATE}..."
 
-              # 根据容器名称选择正确的日志目录
-              if [ "${CONTAINER_TO_UPDATE}" = "${CONTAINER_NAME_1}" ]; then
-                LOG_DIR="/home/go-app/practice/logs/container1"
-              else
-                LOG_DIR="/home/go-app/practice/logs/container2"
-              fi
-
               docker run -d \
                 --name ${CONTAINER_TO_UPDATE} \
                 -p ${PORT}:18080 \
-                -v ${LOG_DIR}:/logs/server.log \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
