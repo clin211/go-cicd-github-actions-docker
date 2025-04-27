@@ -7,7 +7,7 @@ services:
       dockerfile: deployments/docker/Dockerfile
     container_name: user-service-api
     ports:
-      - "8080:8080"
+      - "18080:18080"
     environment:
       - GIN_MODE=release
     restart: unless-stopped
