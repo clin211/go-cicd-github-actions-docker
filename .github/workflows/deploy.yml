@@ -98,7 +98,6 @@ jobs:
 
             # 确保服务器上的配置目录存在
             mkdir -p /home/go-app/practice/configs
-            mkdir -p /home/go-app/practice/logs
 
             # 验证配置文件存在
             if [ ! -f "/home/go-app/practice/configs/config.yaml" ]; then
@@ -122,7 +121,6 @@ jobs:
               docker create \
                 --name ${CONTAINER_NAME_1} \
                 -p 18080:18080 \
-                -v /home/go-app/practice/logs:/app/logs \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
@@ -147,7 +145,6 @@ jobs:
               docker create \
                 --name ${CONTAINER_NAME_2} \
                 -p 18081:18081 \
-                -v /home/go-app/practice/logs:/app/logs \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
@@ -197,7 +194,6 @@ jobs:
               docker create \
                 --name ${CONTAINER_TO_UPDATE} \
                 -p ${PORT}:18080 \
-                -v /home/go-app/practice/logs:/app/logs \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
