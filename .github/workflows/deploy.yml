@@ -144,7 +144,7 @@ jobs:
               echo "Creating container 2 (${CONTAINER_NAME_2}) on port 18081..."
               docker create \
                 --name ${CONTAINER_NAME_2} \
-                -p 18081:18081 \
+                -p 18081:18080 \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
