@@ -25,6 +25,7 @@ coverage.html
 .env
 /vendor/
 /air_errors.log
+.dbdata/
 
 # 依赖文件
 go.sum
