@@ -14,8 +14,8 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
-    "basePath": "/",
+    "host": "localhost:18080",
+    "basePath": "/api/v1",
     "paths": {
         "/auth/signin": {
             "post": {
@@ -138,48 +138,6 @@
                     },
                     "500": {
                         "description": "服务器内部错误",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "创建新用户账号",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "用户管理",
-                    "认证"
-                ],
-                "summary": "用户注册",
-                "parameters": [
-                    {
-                        "description": "用户注册信息",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.UserCreate"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "成功创建用户",
-                        "schema": {
-                            "$ref": "#/definitions/model.UserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误或用户已存在",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

@@ -17,7 +17,6 @@ import (
 // @Success 201 {object} model.UserResponse "成功创建用户"
 // @Failure 400 {object} map[string]string "请求参数错误或用户已存在"
 // @Router /auth/signup [post]
-// @Router /users [post]
 func (h *Handler) SignUp(c *gin.Context) {
 	var userData model.UserCreate
 	if err := c.ShouldBindJSON(&userData); err != nil {

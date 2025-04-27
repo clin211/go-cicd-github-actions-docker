@@ -17,7 +17,6 @@ import (
 	"github.com/clin211/go-cicd-github-actions-docker/internal/middleware"
 	"github.com/clin211/go-cicd-github-actions-docker/internal/pkg/db"
 	"github.com/clin211/go-cicd-github-actions-docker/internal/pkg/log"
-	// _ "github.com/clin211/go-cicd-github-actions-docker/api/openapi/docs" // 导入生成的docs
 )
 
 // @title 用于演示 CI/CD 的 API
@@ -31,8 +30,8 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host localhost:8080
-// @BasePath /
+// @host localhost:18080
+// @BasePath /api/v1
 func main() {
 	// 定义命令行参数
 	var configFile string

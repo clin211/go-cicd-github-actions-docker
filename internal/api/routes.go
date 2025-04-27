@@ -9,7 +9,7 @@ import (
 // RegisterRoutes 设置所有API路由
 func RegisterRoutes(r *gin.Engine) {
 	// 创建依赖
-	userRepo := repository.NewInMemoryUserRepository()
+	userRepo := repository.NewMySQLUserRepository()
 	userHandler := user.NewHandler(userRepo)
 
 	// API版本组

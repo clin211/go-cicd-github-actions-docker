@@ -1,6 +1,8 @@
 package user
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/clin211/go-cicd-github-actions-docker/internal/model"
@@ -34,30 +36,40 @@ type SignInResponse struct {
 func (h *Handler) SignIn(c *gin.Context) {
 	var req SignInRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("登录请求参数绑定失败: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	log.Printf("尝试登录: 用户名=%s, 密码长度=%d", req.Username, len(req.Password))
+
 	// 根据用户名获取用户
 	userResp, err := h.userService.GetByUsername(req.Username)
 	if err != nil {
+		log.Printf("用户 %s 不存在或获取失败: %v", req.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "无效的用户名或密码"})
 		return
 	}
+	log.Printf("成功获取用户 %s 的基本信息", req.Username)
 
 	// 获取完整用户信息以验证密码
 	user, err := h.userService.GetFullUserByUsername(req.Username)
 	if err != nil {
+		log.Printf("获取用户 %s 的完整信息失败: %v", req.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "无效的用户名或密码"})
 		return
 	}
+	log.Printf("成功获取用户 %s 的完整信息，存储密码长度=%d", req.Username, len(user.Password))
 
 	// 验证密码
+	log.Printf("尝试验证密码: 密码=%s, 存储哈希=%s", req.Password, user.Password)
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "无效的用户名或密码"})
+		log.Printf("密码验证失败: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("无效的用户名或密码: %v", err)})
 		return
 	}
+	log.Printf("密码验证成功")
 
 	// 这里应该生成JWT token，简化版本直接返回用户信息
 	c.JSON(http.StatusOK, SignInResponse{
