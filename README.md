@@ -1,47 +1,112 @@
-# 用户服务 API
+# Go CI/CD 示例项目
 
-一个使用 Go、Gin 构建的简单 RESTful 用户服务，遵循清洁架构原则。
+一个使用 Go、Gin 构建的 RESTful API 服务，集成了 MySQL、Redis，并实现了基于 GitHub Actions 的 CI/CD 流程。
 
-## 项目结构
+## 项目架构
 
 ```
-├── cmd/                # 主要应用程序
-│   └── server/         # 服务器启动
-│       └── main.go     # 主函数
-├── internal/           # 私有应用程序代码
-│   ├── api/            # API 处理器
-│   ├── config/         # 配置管理
-│   ├── model/          # 数据模型
-│   ├── repository/     # 数据访问层
-│   └── service/        # 业务逻辑
-├── pkg/                # 公共可复用代码
-├── configs/            # 配置文件
-├── scripts/            # 脚本文件
-├── deployments/        # 部署文件
-│   ├── docker/         # Docker文件
-│   │   └── Dockerfile  # 应用程序Dockerfile
-│   └── docker-compose.yml  # Docker Compose配置
-├── .github/            # GitHub相关配置
-│   └── workflows/      # GitHub Actions工作流
-│       └── deploy.yml  # 部署工作流
+├── api/                        # API 文档相关
+│   └── openapi/                # OpenAPI/Swagger 文档
+├── cmd/                        # 主要应用程序入口
+│   └── server/                 # 服务器启动
+│       └── main.go             # 主函数
+├── configs/                    # 配置文件
+│   ├── config.yaml             # 应用配置
+│   └── db_init.sql             # 数据库初始化脚本
+├── deployments/                # 部署文件
+│   ├── docker/                 # Docker 部署文件
+│   │   ├── Dockerfile          # 应用程序 Dockerfile
+│   │   └── docker-compose.yml  # Docker Compose 配置
+│   └── shell/                  # 部署脚本
+├── docs/                       # 项目文档
+├── internal/                   # 私有应用程序代码
+│   ├── api/                    # API层
+│   │   └── user/               # 用户相关 API 接口
+│   ├── config/                 # 配置模型与加载
+│   ├── middleware/             # HTTP 中间件
+│   ├── model/                  # 数据模型
+│   ├── pkg/                    # 内部通用包
+│   │   ├── db/                 # 数据库连接管理
+│   │   ├── known/              # 常量定义
+│   │   └── log/                # 日志工具
+│   ├── repository/             # 数据访问层
+│   └── service/                # 业务逻辑层
+├── scripts/                    # 工具脚本
+├── .github/                    # GitHub 相关配置
+│   └── workflows/              # GitHub Actions 工作流
+│       └── deploy.yml          # CI/CD 工作流
+├── docker-compose.dev-env.yml  # 开发环境容器配置
+├── .air.toml                   # Air 热重载配置
+├── .editorconfig               # 编辑器配置
+└── Makefile                    # 项目管理命令
 ```
+
+## 技术栈
+
+- **后端框架**: [Gin](https://github.com/gin-gonic/gin)
+- **数据库**:
+  - MySQL: 用户数据持久化存储
+  - Redis: 缓存和会话管理
+- **项目管理**: Makefile
+- **文档**: Swagger/OpenAPI
+- **配置管理**: Viper
+- **日志**: Zap
+- **CI/CD**: GitHub Actions
+- **容器化**: Docker & Docker Compose
+- **热重载**: [Air](https://github.com/cosmtrek/air)
+
+## 功能特性
+
+- RESTful API设计
+- 用户认证与授权
+- 基于MySQL的数据持久化
+- Redis缓存支持
+- 请求ID追踪
+- 结构化日志
+- API文档自动生成
+- 容器化部署
+- CI/CD流水线
 
 ## 开始使用
 
 ### 前提条件
 
-- Go 1.20 或更高版本
-- Docker 和 Docker Compose（可选，用于容器化部署）
-- Make（用于执行 Makefile 命令）
+- Go 1.24 或更高版本
+- Docker 和 Docker Compose
+- Make
 
-### 使用 Makefile
+### 本地开发环境
 
-项目使用 Makefile 来管理常用命令。以下是可用的命令：
+1. 克隆仓库
+
+   ```bash
+   git clone https://github.com/clin211/go-cicd-github-actions-docker.git
+   cd go-cicd-github-actions-docker
+   ```
+
+2. 启动开发环境数据库
+
+   ```bash
+   docker-compose -f docker-compose.dev-env.yml up -d
+   ```
+
+3. 运行应用
+
+   ```bash
+   make run
+   ```
+
+   或使用热重载:
+
+   ```bash
+   make dev
+   ```
+
+4. API 将在 <http://localhost:18080> 可用
+
+### Makefile 命令
 
 ```bash
-# 显示帮助信息
-make help
-
 # 编译项目
 make build
 
@@ -51,95 +116,29 @@ make run
 # 使用热重载运行开发环境
 make dev
 
-# 更新依赖
-make deps
-
-# 清理编译文件
-make clean
-
 # 运行测试
 make test
 
-# 生成测试覆盖率报告
-make cover
-
-# 运行代码检查
-make lint
+# 清理生成文件
+make clean
 
 # 生成 Swagger 文档
 make swagger
 
-# 安装开发工具
-make install-tools
+# 构建Docker镜像
+make docker-build
 
-# 生成 Mock 代码
-make mock
-
-# 构建 Docker 镜像
-make docker
-
-# 使用 Docker Compose 运行项目
-make docker-compose
+# 使用Docker运行
+make docker-run
 ```
-
-### 本地运行
-
-1. 克隆仓库
-   ```bash
-   git clone https://github.com/your-username/user-service.git
-   cd user-service
-   ```
-
-2. 安装依赖
-   ```bash
-   make deps
-   ```
-
-3. 安装开发工具
-   ```bash
-   make install-tools
-   ```
-
-4. 生成 Swagger 文档
-   ```bash
-   make swagger
-   ```
-
-5. 运行应用程序
-   ```bash
-   make run
-   ```
-
-   或使用热重载开发模式：
-   ```bash
-   make dev
-   ```
-
-6. API 将在 http://localhost:8080 可用
-
-   Swagger 文档可以通过 http://localhost:8080/swagger/index.html 访问
-
-### 使用 Docker 运行
-
-1. 构建 Docker 镜像
-   ```bash
-   make docker
-   ```
-
-2. 使用 Docker Compose 运行
-   ```bash
-   make docker-compose
-   ```
-
-3. API 将在 http://localhost:8080 可用
 
 ## API 端点
 
-### 用户
+### 用户管理
 
-- `GET /api/v1/users` - 列出所有用户
-- `GET /api/v1/users/:id` - 通过 ID 获取用户
-- `POST /api/v1/users` - 创建新用户
+- `GET /api/v1/users` - 获取用户列表
+- `GET /api/v1/users/:id` - 获取单个用户
+- `POST /api/v1/users` - 创建用户
 - `PUT /api/v1/users/:id` - 更新用户
 - `DELETE /api/v1/users/:id` - 删除用户
 
@@ -148,37 +147,50 @@ make docker-compose
 - `POST /api/v1/auth/signin` - 用户登录
 - `POST /api/v1/auth/signup` - 用户注册
 
-### 健康检查
+### 系统
 
-- `GET /api/v1/health` - API 健康检查
+- `GET /api/v1/health` - 健康检查
 
-## 开发
+## 数据库设计
 
-### 添加新功能
+项目使用MySQL数据库，主要表结构:
 
-1. 在适当的目录创建新文件
-2. 实现功能
-3. 添加测试
-4. 运行测试和代码检查
-   ```bash
-   make test
-   make lint
-   ```
-5. 更新 Swagger 文档
-   ```bash
-   make swagger
-   ```
+- `user` - 用户信息
+- `role` - 角色定义
+- `user_role` - 用户角色关联
+- `access_token` - 访问令牌
 
-## 部署
+数据库初始化脚本位于 `configs/db_init.sql`
 
-该项目包含用于 CI/CD 的 GitHub Actions 工作流，它会：
+## CI/CD 流程
 
-1. 运行测试
-2. 构建应用程序
-3. 创建 Docker 镜像
-4. 推送到 Docker Hub
-5. 部署到生产环境（占位步骤）
+项目使用GitHub Actions实现CI/CD自动化，工作流程:
+
+1. 代码推送触发工作流
+2. 运行测试
+3. 构建Docker镜像
+4. 推送镜像到Docker Hub
+5. 部署到目标环境
+
+配置文件: `.github/workflows/deploy.yml`
+
+## 项目结构说明
+
+- **分层架构**: 采用仓库模式和服务层模式，实现关注点分离
+- **依赖注入**: 使用构造函数注入各层依赖
+- **配置管理**: 使用Viper管理配置，支持环境变量覆盖
+- **错误处理**: 统一的错误处理机制
+- **中间件**: 请求日志、跨域、安全头等
+- **数据库连接池**: 支持主从读写分离
+
+## 贡献指南
+
+1. Fork 仓库
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
 
 ## 许可证
 
-本项目采用 MIT 许可证授权。
+本项目基于 MIT 许可证开源
