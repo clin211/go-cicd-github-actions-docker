@@ -37,4 +37,4 @@ log:
   disable-stacktrace: false
   level: debug
   format: json
-  output-paths: [ ./tmp/server.log, stdout ]
+  output-paths: [ ./server.log, stdout ]
