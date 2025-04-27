@@ -34,6 +34,9 @@ WORKDIR /app
 COPY --from=builder /app/server .
 COPY --from=builder /app/configs ./configs
 
+# 创建logs目录并设置权限
+RUN mkdir -p /app/logs && chown -R appuser:appuser /app/logs && chmod 755 /app/logs
+
 # 使用非root用户运行
 USER appuser
 

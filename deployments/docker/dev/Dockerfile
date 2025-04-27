@@ -14,6 +14,9 @@ FROM base AS dev
 # 复制应用代码
 COPY . .
 
+# 创建logs目录并设置权限
+RUN mkdir -p /app/logs && chmod 755 /app/logs
+
 # 设置环境变量
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on

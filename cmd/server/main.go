@@ -91,9 +91,9 @@ func main() {
 
 	// 在goroutine中启动服务器
 	go func() {
-		log.Infow("Starting server on %s", cfg.Server.Address)
+		log.Infow("Starting server", "address", cfg.Server.Address)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalw("Failed to start server: %v", err)
+			log.Fatalw("Failed to start server", "error", err)
 		}
 	}()
 
