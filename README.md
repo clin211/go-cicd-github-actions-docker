@@ -187,6 +187,20 @@ make init-db
 
 配置文件: `.github/workflows/deploy.yml`
 
+### GitHub Actions Secrets 配置
+
+部署过程需要配置以下secrets变量：
+
+| 变量名 | 描述 |
+|--------|------|
+| `ALIYUN_USERNAME` | 阿里云容器镜像服务的用户名 |
+| `ALIYUN_PASSWORD` | 阿里云容器镜像服务的密码 |
+| `SERVER_HOST` | 部署服务器的主机地址 |
+| `SERVER_USER` | 部署服务器的用户名 |
+| `SERVER_SSH_KEY` | 部署服务器的 SSH 私钥 |
+
+这些变量需要在 GitHub 仓库的 Settings -> Secrets and variables -> Actions 中进行配置，以确保 CI/CD 流程能够正常执行。
+
 ## 项目结构说明
 
 - **分层架构**: 采用仓库模式和服务层模式，实现关注点分离
