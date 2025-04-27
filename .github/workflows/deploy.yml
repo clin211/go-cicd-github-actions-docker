@@ -96,6 +96,18 @@ jobs:
             CONTAINER_NAME_1="${IMAGE_NAME}-1"
             CONTAINER_NAME_2="${IMAGE_NAME}-2"
 
+            # 确保服务器上的配置目录存在
+            mkdir -p /home/go-app/practice/configs
+            mkdir -p /home/go-app/practice/logs
+
+            # 验证配置文件存在
+            if [ ! -f "/home/go-app/practice/configs/config.yaml" ]; then
+              echo "Warning: Config file does not exist at /home/go-app/practice/configs/config.yaml"
+              echo "Container will use the default embedded config, please create a custom config if needed"
+            else
+              echo "Found config file at /home/go-app/practice/configs/config.yaml"
+            fi
+
             # 找出要更新的容器
             # 检查两个容器中哪一个最旧
             CONTAINER_1_CREATED=$(docker inspect ${CONTAINER_NAME_1} --format '{{.Created}}' 2>/dev/null || echo "")
@@ -105,21 +117,55 @@ jobs:
             if [ -z "$CONTAINER_1_CREATED" ] && [ -z "$CONTAINER_2_CREATED" ]; then
               echo "Initial deployment - starting both containers..."
 
-              # 启动第一个容器
-              echo "Starting container 1 (${CONTAINER_NAME_1}) on port 18080..."
-              docker run -d \
+              # 创建容器1
+              echo "Creating container 1 (${CONTAINER_NAME_1}) on port 18080..."
+              docker create \
                 --name ${CONTAINER_NAME_1} \
                 -p 18080:18080 \
+                -v /home/go-app/practice/logs:/app/logs \
                 --restart always \
                 ${FULL_IMAGE_NAME}
 
-              # 启动第二个容器
-              echo "Starting container 2 (${CONTAINER_NAME_2}) on port 18081..."
-              docker run -d \
+              # 如果配置文件存在，复制到容器
+              if [ -f "/home/go-app/practice/configs/config.yaml" ]; then
+                # 将配置复制到容器中
+                echo "Copying configuration to container ${CONTAINER_NAME_1}..."
+                docker cp /home/go-app/practice/configs/config.yaml ${CONTAINER_NAME_1}:/app/configs/config.yaml
+
+                # 验证配置文件是否成功复制
+                echo "Verifying configuration in container ${CONTAINER_NAME_1}..."
+                docker exec ${CONTAINER_NAME_1} ls -la /app/configs/
+                echo "Config file contents:"
+                docker exec ${CONTAINER_NAME_1} cat /app/configs/config.yaml | head -n 10
+              fi
+
+              # 启动容器
+              docker start ${CONTAINER_NAME_1}
+
+              # 创建容器2
+              echo "Creating container 2 (${CONTAINER_NAME_2}) on port 18081..."
+              docker create \
                 --name ${CONTAINER_NAME_2} \
                 -p 18081:18081 \
+                -v /home/go-app/practice/logs:/app/logs \
                 --restart always \
                 ${FULL_IMAGE_NAME}
+
+              # 如果配置文件存在，复制到容器
+              if [ -f "/home/go-app/practice/configs/config.yaml" ]; then
+                # 将配置复制到容器中
+                echo "Copying configuration to container ${CONTAINER_NAME_2}..."
+                docker cp /home/go-app/practice/configs/config.yaml ${CONTAINER_NAME_2}:/app/configs/config.yaml
+
+                # 验证配置文件是否成功复制
+                echo "Verifying configuration in container ${CONTAINER_NAME_2}..."
+                docker exec ${CONTAINER_NAME_2} ls -la /app/configs/
+                echo "Config file contents:"
+                docker exec ${CONTAINER_NAME_2} cat /app/configs/config.yaml | head -n 10
+              fi
+
+              # 启动容器
+              docker start ${CONTAINER_NAME_2}
 
             # 更新部署 - 确定要更新的容器
             else
@@ -146,14 +192,30 @@ jobs:
               docker stop ${CONTAINER_TO_UPDATE} || true
               docker rm ${CONTAINER_TO_UPDATE} || true
 
-              # 启动新容器
-              echo "Starting new container: ${CONTAINER_TO_UPDATE}..."
-
-              docker run -d \
+              # 创建新容器
+              echo "Creating new container: ${CONTAINER_TO_UPDATE}..."
+              docker create \
                 --name ${CONTAINER_TO_UPDATE} \
                 -p ${PORT}:18080 \
+                -v /home/go-app/practice/logs:/app/logs \
                 --restart always \
                 ${FULL_IMAGE_NAME}
+
+              # 如果配置文件存在，复制到容器
+              if [ -f "/home/go-app/practice/configs/config.yaml" ]; then
+                # 将配置复制到容器中
+                echo "Copying configuration to container ${CONTAINER_TO_UPDATE}..."
+                docker cp /home/go-app/practice/configs/config.yaml ${CONTAINER_TO_UPDATE}:/app/configs/config.yaml
+
+                # 验证配置文件是否成功复制
+                echo "Verifying configuration in container ${CONTAINER_TO_UPDATE}..."
+                docker exec ${CONTAINER_TO_UPDATE} ls -la /app/configs/
+                echo "Config file contents:"
+                docker exec ${CONTAINER_TO_UPDATE} cat /app/configs/config.yaml | head -n 10
+              fi
+
+              # 启动容器
+              docker start ${CONTAINER_TO_UPDATE}
 
               # 验证容器启动状态
               if [ "$(docker inspect -f '{{.State.Running}}' ${CONTAINER_TO_UPDATE})" != "true" ]; then
