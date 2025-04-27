@@ -1,4 +1,4 @@
-.PHONY: all build run clean test lint swagger docker docker-compose help dev deps install-tools mock init-db check-db
+.PHONY: all build run clean test lint swagger docker-dev docker-prod docker-compose-dev docker-compose-prod help dev deps install-tools init-db check-db
 
 # 全局变量
 APP_NAME=go-cicd-github-actions-docker
@@ -20,22 +20,23 @@ help:
 	@echo "    make [target]"
 	@echo ""
 	@echo "可用的目标:"
-	@echo "    build          - 编译项目"
-	@echo "    run            - 运行项目"
-	@echo "    dev            - 运行开发环境(自动重载)"
-	@echo "    deps           - 更新依赖"
-	@echo "    clean          - 清理编译文件"
-	@echo "    test           - 运行测试"
-	@echo "    cover          - 运行测试覆盖率"
-	@echo "    lint           - 运行代码检查"
-	@echo "    swagger        - 生成Swagger文档"
-	@echo "    install-tools  - 安装开发工具"
-	@echo "    mock           - 生成Mock代码"
-	@echo "    docker         - 构建Docker镜像"
-	@echo "    docker-compose - 运行Docker Compose"
-	@echo "    help           - 显示帮助信息"
-	@echo "    init-db        - 初始化数据库"
-	@echo "    check-db       - 检查数据库状态"
+	@echo "    build              - 编译项目"
+	@echo "    run                - 运行项目"
+	@echo "    dev                - 运行开发环境(自动重载)"
+	@echo "    deps               - 更新依赖"
+	@echo "    clean              - 清理编译文件"
+	@echo "    test               - 运行测试"
+	@echo "    cover              - 运行测试覆盖率"
+	@echo "    lint               - 运行代码检查"
+	@echo "    swagger            - 生成Swagger文档"
+	@echo "    install-tools      - 安装开发工具"
+	@echo "    docker-dev         - 构建开发环境Docker镜像"
+	@echo "    docker-prod        - 构建生产环境Docker镜像"
+	@echo "    docker-compose-dev - 运行开发环境Docker Compose"
+	@echo "    docker-compose-prod- 运行生产环境Docker Compose"
+	@echo "    help               - 显示帮助信息"
+	@echo "    init-db            - 初始化数据库"
+	@echo "    check-db           - 检查数据库状态"
 	@echo ""
 
 # 编译项目
@@ -111,27 +112,31 @@ install-tools:
 	@go install github.com/swaggo/swag/cmd/swag@latest
 	@go install github.com/cosmtrek/air@latest
 	@go install golang.org/x/lint/golint@latest
-	@go install github.com/golang/mock/mockgen@latest
 	@echo "开发工具安装完成"
 
-# 生成Mock代码
-mock:
-	@echo "生成Mock代码..."
-	@which mockgen > /dev/null || (echo "安装 mockgen..." && go install github.com/golang/mock/mockgen@latest)
-	@mockgen -source=internal/repository/user_repository.go -destination=internal/repository/mocks/user_repository_mock.go
-	@echo "Mock代码生成完成"
+# 构建开发环境Docker镜像
+docker-dev:
+	@echo "构建开发环境Docker镜像..."
+	@docker build -t $(DOCKER_IMAGE_NAME):dev -f deployments/docker/dev/Dockerfile .
+	@echo "开发环境Docker镜像构建完成: $(DOCKER_IMAGE_NAME):dev"
 
-# 构建Docker镜像
-docker:
-	@echo "构建Docker镜像..."
-	@docker build -t $(DOCKER_IMAGE_NAME) -f deployments/docker/Dockerfile .
-	@echo "Docker镜像构建完成: $(DOCKER_IMAGE_NAME)"
+# 构建生产环境Docker镜像
+docker-prod:
+	@echo "构建生产环境Docker镜像..."
+	@docker build -t $(DOCKER_IMAGE_NAME):prod -f deployments/docker/prod/Dockerfile .
+	@echo "生产环境Docker镜像构建完成: $(DOCKER_IMAGE_NAME):prod"
 
-# 运行Docker Compose
-docker-compose:
-	@echo "运行Docker Compose..."
-	@docker-compose -f deployments/docker-compose.yml up -d
-	@echo "Docker Compose启动完成"
+# 运行开发环境Docker Compose
+docker-compose-dev:
+	@echo "运行开发环境Docker Compose..."
+	@docker-compose -f deployments/docker/dev/docker-compose.yml up -d
+	@echo "开发环境Docker Compose启动完成"
+
+# 运行生产环境Docker Compose
+docker-compose-prod:
+	@echo "运行生产环境Docker Compose..."
+	@docker-compose -f deployments/docker/prod/docker-compose.yml up -d
+	@echo "生产环境Docker Compose启动完成"
 
 # 初始化数据库
 init-db:

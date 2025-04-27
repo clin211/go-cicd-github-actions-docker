@@ -15,8 +15,12 @@
 │   └── db_init.sql             # 数据库初始化脚本
 ├── deployments/                # 部署文件
 │   ├── docker/                 # Docker 部署文件
-│   │   ├── Dockerfile          # 应用程序 Dockerfile
-│   │   └── docker-compose.yml  # Docker Compose 配置
+│   │   ├── dev/                # 开发环境Docker配置
+│   │   │   ├── Dockerfile      # 开发环境Dockerfile
+│   │   │   └── docker-compose.yml # 开发环境Docker Compose配置
+│   │   └── prod/               # 生产环境Docker配置
+│   │       ├── Dockerfile      # 生产环境Dockerfile
+│   │       └── docker-compose.yml # 生产环境Docker Compose配置
 │   └── shell/                  # 部署脚本
 ├── docs/                       # 项目文档
 ├── internal/                   # 私有应用程序代码
@@ -125,11 +129,20 @@ make clean
 # 生成 Swagger 文档
 make swagger
 
-# 构建Docker镜像
-make docker-build
+# 构建开发环境Docker镜像
+make docker-dev
 
-# 使用Docker运行
-make docker-run
+# 构建生产环境Docker镜像
+make docker-prod
+
+# 使用Docker运行开发环境
+make docker-compose-dev
+
+# 使用Docker运行生产环境
+make docker-compose-prod
+
+# 初始化数据库
+make init-db
 ```
 
 ## API 端点
