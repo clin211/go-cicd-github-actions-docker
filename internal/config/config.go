@@ -33,6 +33,7 @@ type Config struct {
 // ServerConfig 保存所有服务器相关的配置
 type ServerConfig struct {
 	Mode    string `mapstructure:"mode"`
+	Bind    string `mapstructure:"bind"`
 	Port    int    `mapstructure:"port"`
 	Address string
 }
@@ -147,7 +148,11 @@ func loadConfig(configFile string) (*Config, error) {
 	}
 
 	// 设置服务器地址
-	cfg.Server.Address = fmt.Sprintf(":%d", cfg.Server.Port)
+	if cfg.Server.Bind != "" {
+		cfg.Server.Address = fmt.Sprintf("%s:%d", cfg.Server.Bind, cfg.Server.Port)
+	} else {
+		cfg.Server.Address = fmt.Sprintf(":%d", cfg.Server.Port)
+	}
 
 	return &cfg, nil
 }

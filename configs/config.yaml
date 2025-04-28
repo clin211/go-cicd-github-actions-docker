@@ -1,5 +1,6 @@
 server:
   mode: "release" # debug, release
+  bind: "0.0.0.0"
   port: 18080
 
 database:
