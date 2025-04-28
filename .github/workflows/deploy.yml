@@ -140,6 +140,15 @@ jobs:
               # 启动容器
               docker start ${CONTAINER_NAME_1}
 
+              # 验证容器1启动状态
+              if [ "$(docker inspect -f '{{.State.Running}}' ${CONTAINER_NAME_1})" != "true" ]; then
+                echo "Container ${CONTAINER_NAME_1} failed to start!"
+                docker logs ${CONTAINER_NAME_1}
+                exit 1
+              fi
+
+              echo "Container ${CONTAINER_NAME_1} started successfully."
+
               # 创建容器2
               echo "Creating container 2 (${CONTAINER_NAME_2}) on port 18081..."
               docker create \
@@ -163,6 +172,15 @@ jobs:
 
               # 启动容器
               docker start ${CONTAINER_NAME_2}
+
+              # 验证容器2启动状态
+              if [ "$(docker inspect -f '{{.State.Running}}' ${CONTAINER_NAME_2})" != "true" ]; then
+                echo "Container ${CONTAINER_NAME_2} failed to start!"
+                docker logs ${CONTAINER_NAME_2}
+                exit 1
+              fi
+
+              echo "Container ${CONTAINER_NAME_2} started successfully."
 
             # 更新部署 - 确定要更新的容器
             else
